@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EarnZim - Watch & Earn</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;text-align:center;background:#111;color:white;padding:15px;margin:0}
+.box{background:#222;padding:15px;border-radius:10px;margin:10px 0}
+button{background:green;color:white;padding:12px;border:none;border-radius:8px;width:100%;font-size:16px;margin-top:5px}
+button:disabled{background:grey}
+.video{width:100%;height:150px;background:black;margin:10px 0;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;border:1px solid #444}
+.tag{background:orange;color:black;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:bold}
+input,select{width:100%;padding:12px;box-sizing:border-box;border-radius:8px;border:none;margin:5px 0}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="box" style="border:2px solid gold;margin-top:20px">
+<h2>🔐 EarnZim - Log In</h2>
+<p>Shandisa Number Ye Zimbabwe Chete</p>
+<input id="phoneInput" placeholder="Isa nhamba: 0771234567" style="text-align:center;font-size:18px">
+<button onclick="login()" style="background:orange;color:black">Log In / Sign Up</button>
+<p id="loginError" style="color:red"></p>
+<p style="font-size:12px">Tinobvuma: EcoCash (077,078) | OneMoney (071) | Telecash (073)</p>
+</div>
+
+<!-- MAIN SITE - YAKAVANZWA KUSVIKIRA WALOGIN -->
+<div id="mainSite" style="display:none">
+<p>Welcome: <b id="userPhone"></b> <button onclick="logout()" style="width:auto;background:red;padding:5px 15px">Log Out</button></p>
+
+<h1>🎬 EarnZim</h1>
+<p>5 Videos (30 secs) = 10 Points Pa Zuva</p>
+<p>Your Points: <b id="points">0</b> = <b id="usdTop" style="color:lime">$0.00 USD</b></p>
+<p>Streak: <b id="streak">0</b> / 20 Days | Invites: <b id="invitesTop">0</b> | Multiplier: <b id="multTop">1x</b></p>
+
+<div class="box"><span class="tag">BETTING AD</span><h3>Video 1/5 - Betting - 30s</h3><div class="video">BETTING VIDEO AD 30s</div><button onclick="claim(this,2)">Watch 30 Secs - Claim</button></div>
+<div class="box"><span class="tag">MOVIE AD</span><h3>Video 2/5 - Movies - 30s</h3><div class="video">MOVIE TRAILER AD 30s</div><button onclick="claim(this,2)">Watch 30 Secs - Claim</button></div>
+<div class="box"><span class="tag">SHOPPING AD</span><h3>Video 3/5 - Shopping - 30s</h3><div class="video">SHOPPING AD 30s</div><button onclick="claim(this,2)">Watch 30 Secs - Claim</button></div>
+<div class="box"><span class="tag">GAMING AD</span><h3>Video 4/5 - Gaming - 30s</h3><div class="video">GAMING AD 30s</div><button onclick="claim(this,2)">Watch 30 Secs - Claim</button></div>
+<div class="box"><span class="tag">FINANCE AD</span><h3>Video 5/5 - Finance - 30s</h3><div class="video">FINANCE AD 30s</div><button onclick="claim(this,2)">Watch 30 Secs - Claim</button></div>
+
+<div class="box" style="border:2px solid gold">
+<h2>👥 Referral Task</h2>
+<p>100 Invites = Kuvhura Cashout | 1000 Invites = 3x Points</p>
+<input id="refLink" value="https://josphatdhliwayo728-cell.github.io/earnzimbouns-christmas.net/?ref=YOURNAME" readonly>
+<button onclick="copyLink()" style="background:orange;color:black">Copy Referral Link</button>
+<p>People You Invited: <b id="refCount">0</b> / 100 ku vhura Cashout</p>
+<button onclick="checkStreak()" style="background:#555">Check My 20 Days Streak - Claim Bonus</button>
+<p id="streakMsg"></p>
+</div>
+
+<div class="box" style="border:2px solid green">
+<h2>💸 Cashout - Zimbabwe</h2>
+<p>Your Money: <b id="usdBalance" style="color:lime;font-size:22px">$0.00 USD</b></p>
+<div style="background:#333;height:20px;border-radius:10px;overflow:hidden"><div id="progressBar" style="background:green;height:20px;width:0%"></div></div>
+<p id="progressText">0%</p>
+<p id="lockMsg" style="color:red;font-weight:bold"></p>
+<select id="payMethod"><option>EcoCash</option><option>OneMoney</option><option>Telecash</option><option>InnBucks</option><option>Mukuru</option><option>Bank Transfer</option></select>
+<input id="payNumber" placeholder="Isa nhamba yako ye EcoCash / OneMoney">
+<button onclick="withdraw()">Request Cashout</button>
+<p id="withdrawMsg"></p>
+</div>
+
+</div> <!-- end mainSite -->
+
+<script>
+let points = parseInt(localStorage.getItem('points') || 0);
+let invites = parseInt(localStorage.getItem('invites') || 0);
+let streak = parseInt(localStorage.getItem('streak') || 0);
+let multiplier = invites >= 1000 ? 3 : 1;
+
+function isZimNumber(num){
+  num = num.replace(/\s/g,'');
+  if(/^07[1-9][0-9]{7}$/.test(num)) return true;
+  if(/^\+2637[1-9][0-9]{7}$/.test(num)) return true;
+  if(/^2637[1-9][0-9]{7}$/.test(num)) return true;
+  return false;
+}
+function login(){
+  let phone = document.getElementById('phoneInput').value.trim();
+  if(!isZimNumber(phone)){
+    document.getElementById('loginError').innerText = '❌ Haisi ye Zimbabwe! Shandisa 077..., 078..., 071... kana +2637...';
+    return;
+  }
+  localStorage.setItem('userPhone', phone);
+  showMain(phone);
+}
+function showMain(phone){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainSite').style.display='block';
+  document.getElementById('userPhone').innerText = phone;
+  updateUI();
+}
+function logout(){ localStorage.removeItem('userPhone'); location.reload(); }
+
+function updateUI(){
+  multiplier = invites >= 1000 ? 3 : 1;
+  document.getElementById('points').innerText = points;
+  document.getElementById('usdTop').innerText = '$' + (points*0.001).toFixed(2) + ' USD';
+  document.getElementById('usdBalance').innerText = '$' + (points*0.001).toFixed(2) + ' USD';
+  document.getElementById('invitesTop').innerText = invites;
+  document.getElementById('refCount').innerText = invites;
+  document.getElementById('streak').innerText = streak;
+  document.getElementById('multTop').innerText = multiplier + 'x';
+  let percent = Math.min(points/5000*100,100);
+  document.getElementById('progressBar').style.width = percent + '%';
+  document.getElementById('progressText').innerText = Math.round(percent) + '% - Wasara ne ' + Math.max(5000-points,0) + ' Points kusvika $5';
+  if(invites < 100){
+    document.getElementById('lockMsg').innerText = '🔒 CASHOUT YAKAKIYWA: Unoda ' + (100-invites) + ' invites zvakare. Une ' + invites + '/100';
+  } else {
+    document.getElementById('lockMsg').innerText = '✅ CASHOUT YAVHURWA! Multiplier yako: ' + multiplier + 'x';
+  }
+}
+function claim(btn,pts){
+  btn.disabled=true; btn.innerText="Wait 30 secs...";
+  setTimeout(()=>{
+    let earned = pts * multiplier;
+    points += earned;
+    localStorage.setItem('points',points);
+    updateUI();
+    btn.innerText="Done! +"+earned+" Points";
+    alert('Wawana '+earned+' Points! Total: '+points+' = $'+(points*0.001).toFixed(2));
+  }, 30000);
+}
+function copyLink(){ let l=document.getElementById('refLink'); l.select(); document.execCommand('copy'); alert('Link yakopiwa!'); }
+function checkStreak(){
+  streak++;
+  localStorage.setItem('streak',streak);
+  if(streak>=20){ points+=100; localStorage.setItem('points',points); document.getElementById('streakMsg').innerText='🎉 20 DAYS! Wawana 100 Points Bonus!'; }
+  else { document.getElementById('streakMsg').innerText='Streak yako: '+streak+'/20 Days. Ramba uchivhura everyday.'; }
+  updateUI();
+}
+function withdraw(){
+  if(invites < 100){ alert('Cashout yakakiywa! Unoda 100 invites. Une '+invites); return; }
+  if(points < 5000){ alert('Hauna kusvika $5. Mari yako ndi $'+(points*0.001).toFixed(2)); return; }
+  let m=document.getElementById('payMethod').value;
+  let n=document.getElementById('payNumber').value;
+  if(n==""){ alert('Isa nhamba yako'); return; }
+  document.getElementById('withdrawMsg').innerText='Request yatambirwa! $5 ichatumirwa ku '+m+' pa '+n+' mumazuva 3-7.';
+}
+let savedPhone = localStorage.getItem('userPhone');
+if(savedPhone){ showMain(savedPhone); } else { updateUI(); }
+</script>
+</body>
+</html>
